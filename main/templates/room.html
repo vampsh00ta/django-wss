@@ -18,10 +18,16 @@
         'ws://' + window.location.host + '/ws/chat/' + roomName + "/" +"?token=" + authToken);
 
     chatSocket.onmessage = function(e) {
+
         var data = JSON.parse(e.data);
-        var message = data['message'];
-        var username = data['username']
-        document.querySelector('#chat-log').value += (username+": "+message + '\n');
+        if (data.event == 'connected'){
+             document.querySelector('#chat-log').value += (data.username+" has connected" +'\n') ;
+        } else {
+            var message = data['message'];
+            var username = data['username']
+            document.querySelector('#chat-log').value += (data.username+": "+data.message + '\n');
+        }
+
     };
 
     chatSocket.onclose = function(e) {

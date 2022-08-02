@@ -7,13 +7,13 @@ from channels.db import database_sync_to_async
 from django.conf import settings
 
 
-@database_sync_to_async
-def get_user(user_id):
-    User = get_user_model()
-    try:
-        return User.objects.get(id=user_id)
-    except User.DoesNotExist:
-        return 'AnonymousUser'
+# @database_sync_to_async
+# def get_user(user_id):
+#     User = get_user_model()
+#     try:
+#         return User.objects.get(id=user_id)
+#     except User.DoesNotExist:
+#         return 'AnonymousUser'
 
 
 class TokenAuthMiddleware:
@@ -21,6 +21,15 @@ class TokenAuthMiddleware:
     def __init__(self, app):
         # Store the ASGI application we were passed
         self.app = app
+
+    @database_sync_to_async
+    def get_user(self,user_id):
+        User = get_user_model()
+        try:
+            return User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return 'AnonymousUser'
+
 
     async def __call__(self, scope, receive, send):
         # Look up user from query string (you should also do things like
@@ -41,7 +50,7 @@ class TokenAuthMiddleware:
             decoded_data = jwt_decode(token, settings.SECRET_KEY, algorithms=["HS256"])
             print(decoded_data)
 
-            scope['user'] = await get_user(int(decoded_data.get('user_id', None)))
+            scope['user'] = await self.get_user(int(decoded_data.get('user_id', None)))
 
             # Return the inner application directly and let it run everything else
 
